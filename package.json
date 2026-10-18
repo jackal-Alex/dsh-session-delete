@@ -1,5 +1,5 @@
 {
-  "name": "dsh-session-delete",
+  "name": "@jackal-alex/dsh-session-delete",
   "version": "0.1.1",
   "description": "Delete DSH sessions from the sidebar: move to a restorable trash can, or purge permanently. | 在 DSH 侧边栏删除会话：先移入可恢复的回收站，也可彻底删除。",
   "type": "module",

@@ -5,4 +5,4 @@
 # `dsh.profile.bundles`; this row is what actually mounts the plugin.
 - insert:
     - id: session-delete
-      name: dsh-session-delete
+      name: '@jackal-alex/dsh-session-delete'

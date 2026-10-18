@@ -75,7 +75,7 @@ function test(name, body) {
 
 test('the bundle registers itself under the package name', () => {
   assert.ok(descriptor, 'window.__ModuleLoader__.load was never called')
-  assert.equal(descriptor.id, 'dsh-session-delete')
+  assert.equal(descriptor.id, '@jackal-alex/dsh-session-delete')
   assert.equal(typeof descriptor.factory, 'function')
 })
 

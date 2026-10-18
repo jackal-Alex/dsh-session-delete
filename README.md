@@ -29,7 +29,7 @@ DSH 的会话行菜单里有 **置顶、重命名、分叉、归档**，没有�
 
 ```sh
 # 从 npm（发布后）
-dsh plugin --profile desktop add dsh-session-delete
+dsh plugin --profile desktop add @jackal-alex/dsh-session-delete
 
 # 从 GitHub（需要本机有 git）
 dsh plugin --profile desktop add github:jackal-Alex/dsh-session-delete
@@ -37,6 +37,8 @@ dsh plugin --profile desktop add github:jackal-Alex/dsh-session-delete
 # 本地开发（软链，改完硬刷新即可）
 dsh plugin --profile desktop add link:/path/to/dsh-session-delete
 ```
+
+> ⚠️ **别装错**：npm 上另有一个第三方同名插件 `dsh-session-delete`（作者 vtxf，仓库 `vtxf/dsh-session-delete`），功能相近但**不是本项目**。本项目的 npm 包名带 scope，是 **`@jackal-alex/dsh-session-delete`**（GitHub 仓库是 `jackal-Alex/dsh-session-delete`），装的时候认准这两处作者名。
 
 装完**重启 DSH**（bundle 层在启动时装配），再按 **Ctrl+Shift+R** 硬刷新页面加载客户端半边。
 
