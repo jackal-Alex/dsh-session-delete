@@ -27,12 +27,14 @@ const sessionDir = join(home, 'sessions', workspace, dirName)
  * @param {'GET'|'POST'} method - HTTP method.
  * @param {object} [body] - JSON body.
  * @param {object} [headers] - extra headers.
+ * @param {string} [remoteAddress] - peer address, loopback by default.
  * @returns {any} request-ish emitter.
  */
-function request(method, body, headers = {}) {
+function request(method, body, headers = {}, remoteAddress = '127.0.0.1') {
   const req = new EventEmitter()
   req.method = method
   req.headers = { ...headers }
+  req.socket = { remoteAddress }
   const payload = body === undefined ? '' : JSON.stringify(body)
   process.nextTick(() => {
     if (payload) req.emit('data', Buffer.from(payload, 'utf8'))
@@ -133,13 +135,37 @@ await test('apply registers five exact routes under /api/session-delete', () => 
   }
 })
 
+const HEADER = { 'x-dsh-session-delete': '1' }
+
 await test('GET /list returns the seeded session', async () => {
   const res = response()
-  await call(route('/list'), request('GET'), res)
+  await call(route('/list'), request('GET', undefined, HEADER), res)
   assert.equal(res.status, 200)
   assert.equal(res.json.ok, true)
   assert.equal(res.json.sessions.length, 1)
   assert.equal(res.json.sessions[0].sessionId, sessionId)
+})
+
+await test('GET without the action header is refused', async () => {
+  // Regression: exact routes sit ahead of the host's auth fence, so a plain
+  // GET used to answer 200 to any local process.
+  const res = response()
+  await call(route('/list'), request('GET'), res)
+  assert.equal(res.status, 403)
+  assert.equal(res.json.code, 'forbidden')
+})
+
+await test('a non-loopback peer is refused', async () => {
+  const res = response()
+  await call(route('/list'), request('GET', undefined, HEADER, '10.1.2.3'), res)
+  assert.equal(res.status, 403)
+  assert.equal(res.json.error, '仅允许本机访问')
+})
+
+await test('an IPv4-mapped loopback peer is accepted', async () => {
+  const res = response()
+  await call(route('/list'), request('GET', undefined, HEADER, '::ffff:127.0.0.1'), res)
+  assert.equal(res.status, 200)
 })
 
 await test('POST /delete without the guard header is refused', async () => {
@@ -158,7 +184,7 @@ await test('GET on a POST route is refused with 405', async () => {
 
 await test('POST /delete moves the session to the trash', async () => {
   const res = response()
-  await call(route('/delete'), request('POST', { sessionId }, { 'x-dsh-session-delete': '1' }), res)
+  await call(route('/delete'), request('POST', { sessionId }, HEADER), res)
   assert.equal(res.status, 200)
   assert.equal(res.json.ok, true)
   assert.ok(res.json.trashId)
@@ -167,10 +193,10 @@ await test('POST /delete moves the session to the trash', async () => {
 
 await test('GET /trash lists the entry, POST /restore puts it back', async () => {
   const trashRes = response()
-  await call(route('/trash'), request('GET'), trashRes)
+  await call(route('/trash'), request('GET', undefined, HEADER), trashRes)
   assert.equal(trashRes.json.entries.length, 1)
   const restoreRes = response()
-  await call(route('/restore'), request('POST', { trashId: trashRes.json.entries[0].trashId }, { 'x-dsh-session-delete': '1' }), restoreRes)
+  await call(route('/restore'), request('POST', { trashId: trashRes.json.entries[0].trashId }, HEADER), restoreRes)
   assert.equal(restoreRes.status, 200)
   assert.equal(restoreRes.json.workspace, workspace)
   assert.equal(existsSync(join(sessionDir, 'session.v4.jsonl.zstd')), true)
@@ -178,17 +204,17 @@ await test('GET /trash lists the entry, POST /restore puts it back', async () =>
 
 await test('POST /delete with mode purge leaves nothing behind', async () => {
   const res = response()
-  await call(route('/delete'), request('POST', { sessionId, mode: 'purge' }, { 'x-dsh-session-delete': '1' }), res)
+  await call(route('/delete'), request('POST', { sessionId, mode: 'purge' }, HEADER), res)
   assert.equal(res.status, 200)
   assert.equal(res.json.purged, true)
   const trashRes = response()
-  await call(route('/trash'), request('GET'), trashRes)
+  await call(route('/trash'), request('GET', undefined, HEADER), trashRes)
   assert.equal(trashRes.json.entries.length, 0)
 })
 
 await test('deleting an unknown session is a 404', async () => {
   const res = response()
-  await call(route('/delete'), request('POST', { sessionId }, { 'x-dsh-session-delete': '1' }), res)
+  await call(route('/delete'), request('POST', { sessionId }, HEADER), res)
   assert.equal(res.status, 404)
   assert.equal(res.json.code, 'not-found')
 })
@@ -196,7 +222,8 @@ await test('deleting an unknown session is a 404', async () => {
 await test('a malformed body is a 400, not a crash', async () => {
   const req = new EventEmitter()
   req.method = 'POST'
-  req.headers = { 'x-dsh-session-delete': '1' }
+  req.headers = HEADER
+  req.socket = { remoteAddress: '127.0.0.1' }
   req.destroy = () => {}
   const res = response()
   route('/delete').handler(req, res)
@@ -216,7 +243,7 @@ await test('without DSH_HOME the routes fall back to ~/.dsh instead of throwing'
   delete process.env.DSH_HOME
   try {
     const res = response()
-    await call(route('/list'), request('GET'), res)
+    await call(route('/list'), request('GET', undefined, HEADER), res)
     assert.equal(res.status, 200)
     assert.equal(res.json.ok, true)
     assert.equal(typeof res.json.home, 'string')

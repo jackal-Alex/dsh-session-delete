@@ -66,7 +66,12 @@ curl -X POST http://127.0.0.1:19387/api/session-delete/restore \
 | POST | `/api/session-delete/restore` | `{trashId}` —— 放回原位置 |
 | POST | `/api/session-delete/purge` | `{trashId}` —— 彻底删除，不可恢复 |
 
-所有写请求必须带 `x-dsh-session-delete: 1`：跨站页面无法在不触发 CORS 预检的情况下带自定义头，而这些路由不发放 CORS。
+所有请求（**包括 GET**）都必须带 `x-dsh-session-delete: 1`，并且只接受回环对端（`127.0.0.1` / `::1`）。
+原因：DSH 把 `exact` 类型的路由注册在它自己的鉴权围栏之前，插件必须自己上闸 —— 自定义头会触发跨站预检（这些路由不发放 CORS），回环判断则拦住非本机来源。手工调用时记得带上：
+
+```sh
+curl -s http://127.0.0.1:19387/api/session-delete/list -H "x-dsh-session-delete: 1"
+```
 
 ## 兼容性
 

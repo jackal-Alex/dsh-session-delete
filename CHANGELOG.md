@@ -4,6 +4,18 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] — 2026-10-18
+
+### Security
+
+- **路由此前无需任何凭据即可调用**：DSH 把 `exact` 类型的 web 路由注册在鉴权围栏**之前**，
+  所以 `GET /api/session-delete/list` 对本机任意进程都返回 200 —— 能读会话列表、能删会话。
+  现在两道闸：
+  - **只接受回环对端**（`127.0.0.1` / `::1` / `::ffff:127.0.0.1`），其它地址一律 403；
+  - **所有方法**（含 GET）都必须带 `x-dsh-session-delete: 1` 头，不再只要求 POST。
+  浏览器跨站请求因自定义头触发 CORS 预检而无法伪造，因此 UI 不受影响、跨站页面也无法驱动删除。
+- 新增三条回归测试：缺头 → 403、非回环对端 → 403、`::ffff:127.0.0.1` 映射地址仍放行。
+
 ## [0.1.2] — 2026-10-18
 
 ### Fixed
