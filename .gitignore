@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Local state the plugin writes at runtime (never in the repo)
+session-trash/
+*.log
+
+# Editor / OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Package output
+*.tgz
