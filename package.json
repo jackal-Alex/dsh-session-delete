@@ -1,0 +1,62 @@
+{
+  "name": "dsh-session-delete",
+  "version": "0.1.1",
+  "description": "Delete DSH sessions from the sidebar: move to a restorable trash can, or purge permanently. | 在 DSH 侧边栏删除会话：先移入可恢复的回收站，也可彻底删除。",
+  "type": "module",
+  "main": "./lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./host": "./lib/host.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "author": "jackal-Alex",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jackal-Alex/dsh-session-delete.git"
+  },
+  "homepage": "https://github.com/jackal-Alex/dsh-session-delete#readme",
+  "bugs": {
+    "url": "https://github.com/jackal-Alex/dsh-session-delete/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "session",
+    "session-manager",
+    "delete",
+    "trash",
+    "recycle-bin"
+  ],
+  "scripts": {
+    "check": "node --check lib/host.js && node --check lib/index.js && node --check lib/client.js",
+    "test": "node tests/host.test.mjs && node tests/routes.test.mjs && node tests/client.test.mjs",
+    "check:meta": "node -e \"const p=require('./package.json');const bad=['repository.url','homepage','bugs.url','author'].filter(k=>k.split('.').reduce((o,x)=>o&&o[x],p)?.includes?.('OWNER'));if(bad.length){console.error('替换 package.json 里的 OWNER：'+bad.join(', '));process.exit(1)}console.log('metadata ok')\""
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots"
+      ]
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

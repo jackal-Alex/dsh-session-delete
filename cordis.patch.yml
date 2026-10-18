@@ -1,0 +1,8 @@
+# dsh-session-delete bundle patch.
+#
+# The package declares `dsh.bundle.patch` in package.json, so
+# `dsh plugin --profile <name> add <this package>` appends it to
+# `dsh.profile.bundles`; this row is what actually mounts the plugin.
+- insert:
+    - id: session-delete
+      name: dsh-session-delete
