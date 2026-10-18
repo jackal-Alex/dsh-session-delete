@@ -208,6 +208,24 @@ await test('a malformed body is a 400, not a crash', async () => {
   assert.equal(res.status, 400)
 })
 
+await test('without DSH_HOME the routes fall back to ~/.dsh instead of throwing', async () => {
+  // Regression: the desktop main process does not export DSH_HOME. Reading it
+  // eagerly produced `home = undefined`, and path.join(undefined, 'sessions')
+  // answered every request with ERR_INVALID_ARG_TYPE.
+  const saved = process.env.DSH_HOME
+  delete process.env.DSH_HOME
+  try {
+    const res = response()
+    await call(route('/list'), request('GET'), res)
+    assert.equal(res.status, 200)
+    assert.equal(res.json.ok, true)
+    assert.equal(typeof res.json.home, 'string')
+    assert.ok(res.json.home.toLowerCase().endsWith('.dsh'), 'fallback home was ' + res.json.home)
+  } finally {
+    process.env.DSH_HOME = saved
+  }
+})
+
 await fs.rm(home, { recursive: true, force: true })
 delete process.env.DSH_HOME
 

@@ -4,6 +4,17 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] — 2026-10-18
+
+### Fixed
+
+- **每一次删除都会失败并弹出 `ERR_INVALID_ARG_TYPE`**：宿主半边在挂载时读一次
+  `process.env.DSH_HOME`，而桌面版主进程并不导出这个变量，`home` 因此是 `undefined`；
+  此后每个请求都在 `path.join(undefined, 'sessions')` 处抛出
+  `The "path" argument must be of type string. Received undefined`。
+  现在每个请求都用 `resolveHome()` 解析，环境变量缺失时回落到 `~/.dsh`。
+- 新增回归测试：清掉 `DSH_HOME` 后 `GET /list` 仍须返回 200 —— 修复前这条测试会红。
+
 ## [0.1.1] — 2026-10-18
 
 ### Fixed
