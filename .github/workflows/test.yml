@@ -1,0 +1,25 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax check
+        run: node --check lib/host.js && node --check lib/index.js && node --check lib/client.js
+      - name: Host file operations
+        run: node tests/host.test.mjs
+      - name: Host routes
+        run: node tests/routes.test.mjs
+      - name: Browser bundle wiring
+        run: node tests/client.test.mjs
+      - name: Packaging contents
+        run: npm pack --dry-run
